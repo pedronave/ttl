@@ -5,6 +5,11 @@ using UnityEngine.Tilemaps;
 
 public class Packet : MonoBehaviour
 {
+    public PacketAsset packet;
+    private SpriteRenderer sr;
+
+    public Vector3 spritePivot = new Vector3(0.5f, 0.5f);
+
     public Grid grid;
     public bool selected;
 
@@ -14,7 +19,7 @@ public class Packet : MonoBehaviour
     public Path path;
 
     public List<Vector3Int> positions;
-    public Vector3Int lastMouseCell;
+    private Vector3Int lastMouseCell;
 
     public static TileBase h; // Horizontal path
     public static TileBase v; // Vertical path
@@ -35,13 +40,32 @@ public class Packet : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        if (grid == null)
+        {
+            grid = FindObjectOfType<Grid>();
+        }
+
+        if (pathTilemap == null)
+        {
+            GameObject temp = new GameObject(string.Format("{0} path", packet.name));
+
+            GameObject tilemap = Instantiate(temp, grid.transform);
+            Destroy(temp);
+            tilemap.AddComponent<Tilemap>();
+            tilemap.AddComponent<TilemapRenderer>();
+            pathTilemap = tilemap.GetComponent<Tilemap>();
+        }
+
+        sr = GetComponent<SpriteRenderer>();
+        sr.sprite = packet.sprite;
+
         path = new Path(grid.WorldToCell(transform.position), pathTilemap, pathTile);
         h = hTile;
         v = vTile;
         rb = rbTile;
         lb = lbTile;
         rt = rtTile;
-        lt =ltTile;
+        lt = ltTile;
     }
 
     // Update is called once per frame
@@ -53,7 +77,6 @@ public class Packet : MonoBehaviour
         {
             if (grid.WorldToCell(mousePos).Equals(grid.WorldToCell(transform.position)))
             {
-                Debug.Log("clicked packet");
                 // Reset
                 selected = true;
                 path.Clear();
@@ -77,8 +100,29 @@ public class Packet : MonoBehaviour
             }
             lastMouseCell = mouseCell;
         }
-
         
+    }
+
+    private void FixedUpdate()
+    {
+        Vector3 newPos = grid.CellToWorld(path.Move()) + spritePivot;
+
+        transform.position = newPos;
+        positions = path.PathPositions();
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        Packet other = collision.GetComponent<Packet>();
+        if (other != null)
+        {
+
+        }
+    }
+
+    private void OnDestroy()
+    {
+        Destroy(pathTilemap.gameObject);
     }
 }
 
@@ -112,11 +156,11 @@ public class Path
         while (Mathf.Abs(relative.x) > 1 || Mathf.Abs(relative.y) > 1)
         {
             Vector3Int relDirection = new Vector3Int(SignOrZero(relative.x), SignOrZero(relative.y), 0);
-
             
             if (relDirection.x != 0 && relDirection.y != 0)
             {
                 float rng = Random.Range(0f, 1f);
+
                 // Pick a random direction
                 correctivePos += new Vector3Int(relDirection.x * Mathf.RoundToInt(rng), relDirection.y * Mathf.RoundToInt(1 - rng), 0);
             }
@@ -154,6 +198,31 @@ public class Path
         AddCellToEnd(position);
     }
 
+    /// <summary>
+    /// If there is a next cell on the path, moves that to the head of the path.
+    /// </summary>
+    /// <returns>Head of the path.</returns>
+    public Vector3Int Move()
+    {
+        if (head.next != null)
+        {
+            if (pathMap != null)
+            {
+                pathMap.SetTile(head.value, null);
+                pathMap.SetTile(head.next.value, null);
+            }
+            
+
+            head = head.next;
+            head.previous = null;
+
+            return head.value;
+        }else
+        {
+            return head.value;
+        }
+    }
+
     public List<Vector3Int> PathPositions()
     {
         List<Vector3Int> path = new List<Vector3Int>();
@@ -183,7 +252,7 @@ public class Path
         PathNode searchNode = head;
         PathNode newNode = new PathNode(cell);
 
-        while (searchNode.next != null)
+        do
         {
             // If the position being added is already on the path, we want the path to stop at that position, removing the following steps.
             if (searchNode.value.Equals(cell))
@@ -191,23 +260,34 @@ public class Path
                 ClearFollowingSteps(searchNode);
                 searchNode.next = null;
                 tail = searchNode;
-                DrawPath(searchNode.previous);
+
+                DrawPath(searchNode);
+
                 return;
             }
             else
             {
-                searchNode = searchNode.next;
+                if (searchNode.next != null)
+                {
+                    searchNode = searchNode.next;
+                }
             }
-        }
+        } while (searchNode.next != null);
 
 
         searchNode.next = newNode;
         newNode.previous = searchNode;
         tail = newNode;
-        
+
 
         // Draw the path for the updates tiles
-        DrawPath(searchNode.previous);
+        if (searchNode.previous != null)
+        {
+            DrawPath(searchNode.previous);
+        }else
+        {
+            DrawPath(searchNode);
+        }
     }
 
     private void ClearFollowingSteps(PathNode node)
@@ -223,9 +303,17 @@ public class Path
 
     private void DrawPath(PathNode start)
     {
+        
+        // If we're starting at the head of the path, skip it as to not draw it
+        
+
         while (start != null)
         {
-            DrawTile(start);
+            if (start.value != head.value && pathMap != null)
+            {
+                DrawTile(start);
+            }
+            
             start = start.next;
         }
     }

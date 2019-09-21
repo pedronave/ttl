@@ -1,0 +1,16 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45a6621c209e5d74e9186b88ff2a09c6, type: 3}
+  m_Name: Scroll Packet
+  m_EditorClassIdentifier: 
+  packetName: Scroll
+  sprite: {fileID: -3719574320008506170, guid: 38f386d662df21b4c9d90cf4a0238b2f, type: 3}
