@@ -104,10 +104,13 @@ public class Packet : MonoBehaviour
             if (!mouseCell.Equals(lastMouseCell) && boundsTilemap.cellBounds.Contains(mouseCell))
             {
                 path.AddDestination(mouseCell);
+                lastMouseCell = mouseCell;
+
             }
-            lastMouseCell = mouseCell;
         }
-        
+
+        positions = path.PathPositions();
+
     }
 
     private void FixedUpdate()

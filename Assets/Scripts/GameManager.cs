@@ -64,6 +64,11 @@ public class GameManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (Input.GetButtonDown("Fire2"))
+        {
+            SpawnRandomPacket();
+        }
+
         if (elapsedTime >= gameDuration)
         {
             
@@ -133,29 +138,7 @@ public class GameManager : MonoBehaviour
     {
         while (elapsedTime < gameDuration)
         {
-            int pipeIndex;
-
-            // Pick a packet from a random pipe
-            int packetIndex;
-
-            do
-            {
-                pipeIndex = Random.Range(0, pipes.Count);
-                packetIndex = Random.Range(0, pipes.Count);
-            } while (pipeIndex == packetIndex);
-
-            GameObject spawnedGo = pipes[pipeIndex].SpawnPacket(pipes[packetIndex].packet);
-
-            if (spawnedGo != null)
-            {
-                Packet spawnedPacket = spawnedGo.GetComponent<Packet>();
-                if (spawnedPacket != null)
-                {
-                    spawnedPackets.Add(spawnedPacket);
-
-                }
-
-            }
+            SpawnRandomPacket();
 
             yield return new WaitForSeconds(1 / packetsPerSecond);
         }
@@ -281,6 +264,33 @@ public class GameManager : MonoBehaviour
         Pipe pipe = pipeGo.GetComponent<Pipe>();
         pipe.cell = position;
         pipe.packet = packetAssets[0];
+    }
+
+    private void SpawnRandomPacket()
+    {
+        int pipeIndex;
+
+        // Pick a packet from a random pipe
+        int packetIndex;
+
+        do
+        {
+            pipeIndex = Random.Range(0, pipes.Count);
+            packetIndex = Random.Range(0, pipes.Count);
+        } while (pipeIndex == packetIndex);
+
+        GameObject spawnedGo = pipes[pipeIndex].SpawnPacket(pipes[packetIndex].packet);
+
+        if (spawnedGo != null)
+        {
+            Packet spawnedPacket = spawnedGo.GetComponent<Packet>();
+            if (spawnedPacket != null)
+            {
+                spawnedPackets.Add(spawnedPacket);
+
+            }
+
+        }
     }
 
     private void SpawnTestPipes()

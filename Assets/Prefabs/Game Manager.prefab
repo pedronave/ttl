@@ -1,0 +1,76 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &8647842300687211919
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8647842300687211921}
+  - component: {fileID: 8647842300687211918}
+  m_Layer: 0
+  m_Name: Game Manager
+  m_TagString: Untagged
+  m_Icon: {fileID: 7866945982896999795, guid: 0000000000000000d000000000000000, type: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8647842300687211921
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8647842300687211919}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8647842300687211918
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8647842300687211919}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74b551bc133b1c84595d031caff78ccc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  randomPipes: 0
+  numberOfPipes: 10
+  packetAssets:
+  - {fileID: 11400000, guid: f5ee5a43a080e3749a21060f00184455, type: 2}
+  - {fileID: 11400000, guid: 7729a40b5a672bf489cf9eae8cc1f1e6, type: 2}
+  - {fileID: 11400000, guid: 48a13cb0570bdf1478b19bd5c1b72f38, type: 2}
+  - {fileID: 11400000, guid: 83489c241c568ca44bb0e46498b9238f, type: 2}
+  - {fileID: 11400000, guid: 781d11115d54fc241af78fa4367f9956, type: 2}
+  - {fileID: 11400000, guid: b1eea293175468446b3909688a88bfd4, type: 2}
+  - {fileID: 11400000, guid: 3c6075d9a32b09f40833698ae67ec04b, type: 2}
+  - {fileID: 11400000, guid: 7dca2cf2504074d48b7c0e75597defda, type: 2}
+  - {fileID: 11400000, guid: 3282c11229786fc45897ae1c19389f16, type: 2}
+  - {fileID: 11400000, guid: b5fab0755c33aa04bb3cbcf44f864a67, type: 2}
+  gameDuration: 180
+  score: 0
+  ticksPerSecond: 1
+  packetsPerSecond: 0.25
+  packetDeliveryPoints: 10
+  wrongPacketDeliveryPenalty: 10
+  packetCollisionPenalty: 10
+  boundsTilemap: {fileID: 0}
+  pipePrefab: {fileID: 6492289980262821005, guid: 7b98182a322c0094aa30c2aacb4b8f36,
+    type: 3}
+  positionPipesPrefab: {fileID: 5103763918480934834, guid: 6b7bb09d5d25fc24b8f303c4200c17f8,
+    type: 3}
+  pipes: []
+  packetPrefabs: []
+  spawnedPackets: []
+  scoreText: {fileID: 0}
+  timeText: {fileID: 0}
+  audioManager: {fileID: 0}
