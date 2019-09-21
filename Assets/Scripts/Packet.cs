@@ -8,9 +8,12 @@ public class Packet : MonoBehaviour
     public PacketAsset packet;
     private SpriteRenderer sr;
 
+    public GameManager gm;
+
     public Vector3 spritePivot = new Vector3(0.5f, 0.5f);
 
     public Grid grid;
+    private Tilemap boundsTilemap;
     public bool selected;
 
     public TileBase pathTile; 
@@ -35,7 +38,7 @@ public class Packet : MonoBehaviour
     public TileBase rtTile; // Corner right top
     public TileBase ltTile; // Corner left top
 
-
+    public Vector3Int Cell => grid.WorldToCell(transform.position);
 
     // Start is called before the first frame update
     void Start()
@@ -43,6 +46,8 @@ public class Packet : MonoBehaviour
         if (grid == null)
         {
             grid = FindObjectOfType<Grid>();
+            boundsTilemap = GameObject.FindGameObjectWithTag("Map Bounds").GetComponent<Tilemap>();
+
         }
 
         if (pathTilemap == null)
@@ -66,6 +71,9 @@ public class Packet : MonoBehaviour
         lb = lbTile;
         rt = rtTile;
         lt = ltTile;
+
+        gm = FindObjectOfType<GameManager>();
+        gm.tickElapsed += Hop;
     }
 
     // Update is called once per frame
@@ -93,10 +101,9 @@ public class Packet : MonoBehaviour
         {
             // Register path
             Vector3Int mouseCell = grid.WorldToCell(mousePos);
-            if (!mouseCell.Equals(lastMouseCell))
+            if (!mouseCell.Equals(lastMouseCell) && boundsTilemap.cellBounds.Contains(mouseCell))
             {
                 path.AddDestination(mouseCell);
-                positions = path.PathPositions();
             }
             lastMouseCell = mouseCell;
         }
@@ -105,10 +112,14 @@ public class Packet : MonoBehaviour
 
     private void FixedUpdate()
     {
+        
+    }
+
+    private void Hop()
+    {
         Vector3 newPos = grid.CellToWorld(path.Move()) + spritePivot;
 
         transform.position = newPos;
-        positions = path.PathPositions();
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
@@ -122,7 +133,12 @@ public class Packet : MonoBehaviour
 
     private void OnDestroy()
     {
-        Destroy(pathTilemap.gameObject);
+        if (pathTilemap != null)
+        {
+            Destroy(pathTilemap.gameObject);
+        }
+
+        gm.tickElapsed -= Hop;
     }
 }
 

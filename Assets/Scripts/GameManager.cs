@@ -11,8 +11,15 @@ public class GameManager : MonoBehaviour
     public List<PacketAsset> packetAssets;
 
     public float gameDuration = 180f;
-    public float elapsedTime = 0f;
+    private float elapsedTime = 0f;
     public int score = 0;
+
+    public float ticksPerSecond = 2f;
+    public float packetsPerSecond = 0.5f;
+
+    public int packetDeliveryPoints = 10;
+    public int wrongPacketDeliveryPenalty = 10;
+    public int packetCollisionPenalty = 10;
 
     public Tilemap boundsTilemap;
 
@@ -22,8 +29,18 @@ public class GameManager : MonoBehaviour
     public List<Pipe> pipes;
 
     public List<Packet> packetPrefabs;
+    public List<Packet> spawnedPackets = new List<Packet>();
 
     public Text scoreText;
+    public Text timeText;
+    public AudioManager audioManager;
+
+    private Coroutine tickCoroutine;
+    private Coroutine packetSpawnCoroutine;
+    
+
+    public delegate void OnTickHandler();
+    public event OnTickHandler tickElapsed = delegate { };
 
     // Start is called before the first frame update
     void Start()
@@ -40,27 +57,107 @@ public class GameManager : MonoBehaviour
         }
 
         UpdateScoreText();
-
+        tickCoroutine = StartCoroutine(TickCoroutine());
+        packetSpawnCoroutine = StartCoroutine(PacketSpawnCorouting());
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetButtonDown("Fire2"))
-        {
-            //pipes[0].SpawnPacket(packetAssets[0]);
-            for (int i = 0; i < pipes.Count; i++)
-            {
-                pipes[i].SpawnPacket(packetAssets[i]);
-            }
-
-        }
-        elapsedTime += Time.deltaTime;
-
         if (elapsedTime >= gameDuration)
         {
+            
             // End game
             Debug.LogWarning("Game over");
+            StopCoroutine(tickCoroutine);
+            StopCoroutine(packetSpawnCoroutine);
+        }else
+        {
+            elapsedTime += Time.deltaTime;
+            UpdateTimeText();
+        }
+    }
+
+    public IEnumerator TickCoroutine()
+    {
+        while (elapsedTime < gameDuration)
+        {
+            yield return new WaitForSeconds(1/ticksPerSecond);
+
+            tickElapsed();
+            audioManager.PlayTick();
+
+            // Check collisions
+            try
+            {
+                List<Packet> packetsToRemove = new List<Packet>();
+
+                foreach (Packet packet in spawnedPackets)
+                {
+                    List<Packet> collidingPackets = spawnedPackets.FindAll(p => p.Cell == packet.Cell && p != packet);
+
+                    if (collidingPackets.Count > 0)
+                    {
+                        packetsToRemove.AddRange(collidingPackets);
+                    }
+                }
+
+                if (packetsToRemove.Count > 0)
+                {
+                    audioManager.PlayCollision();
+
+                    foreach (Packet packet in packetsToRemove)
+                    {
+                        if (spawnedPackets.Contains(packet))
+                        {
+                            spawnedPackets.Remove(packet);
+                            Destroy(packet.gameObject);
+                            score -= packetCollisionPenalty;
+                            UpdateScoreText();
+                        }
+                    }
+                }
+                
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError("Caught exception while checking for packet collisions. " + e.Message);
+                spawnedPackets.RemoveAll(item => item == null);
+            }
+            
+
+        }
+    }
+
+    public IEnumerator PacketSpawnCorouting()
+    {
+        while (elapsedTime < gameDuration)
+        {
+            int pipeIndex;
+
+            // Pick a packet from a random pipe
+            int packetIndex;
+
+            do
+            {
+                pipeIndex = Random.Range(0, pipes.Count);
+                packetIndex = Random.Range(0, pipes.Count);
+            } while (pipeIndex == packetIndex);
+
+            GameObject spawnedGo = pipes[pipeIndex].SpawnPacket(pipes[packetIndex].packet);
+
+            if (spawnedGo != null)
+            {
+                Packet spawnedPacket = spawnedGo.GetComponent<Packet>();
+                if (spawnedPacket != null)
+                {
+                    spawnedPackets.Add(spawnedPacket);
+
+                }
+
+            }
+
+            yield return new WaitForSeconds(1 / packetsPerSecond);
         }
     }
 
@@ -68,13 +165,13 @@ public class GameManager : MonoBehaviour
     {
         if (pipe.packet == packet.packet)
         {
-            score += 10;
+            score += packetDeliveryPoints;
         }
         else
         {
-            score -= 10;
+            score -= wrongPacketDeliveryPenalty;
         }
-
+        spawnedPackets.Remove(packet);
         UpdateScoreText();
         Destroy(packet.gameObject);
     }
@@ -87,7 +184,13 @@ public class GameManager : MonoBehaviour
         UpdateScoreText();
     }
 
-    public void UpdateScoreText()
+    private void UpdateTimeText()
+    {
+        float timeLeft = gameDuration - elapsedTime;
+        timeText.text = string.Format("{0}:{1:00}", (int)(timeLeft / 60f), (int)(timeLeft % 60f));
+    }
+
+    private void UpdateScoreText()
     {
         scoreText.text = string.Format("Score: {0}", score);
     }
