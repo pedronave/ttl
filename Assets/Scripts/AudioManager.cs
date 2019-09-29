@@ -6,6 +6,8 @@ public class AudioManager : MonoBehaviour
 {
     public AudioSource tickSource;
     public AudioSource collisionSource;
+    public AudioSource correctDeliverySource;
+    public AudioSource wrongDeliverySource;
 
 
     // Start is called before the first frame update
@@ -29,5 +31,15 @@ public class AudioManager : MonoBehaviour
     {
         collisionSource.pitch = Random.Range(0.9f, 1.1f);
         collisionSource.Play();
+    }
+
+    public void PlayCorrectDelivery()
+    {
+        correctDeliverySource.Play();
+    }
+
+    public void PlayWrongDelivery()
+    {
+        wrongDeliverySource.Play();
     }
 }

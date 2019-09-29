@@ -12,10 +12,16 @@ public class GameManager : MonoBehaviour
 
     public float gameDuration = 180f;
     private float elapsedTime = 0f;
+    private bool gameOver = false;
     public int score = 0;
 
-    public float ticksPerSecond = 2f;
-    public float packetsPerSecond = 0.5f;
+    [SerializeField]
+    [Tooltip("Should be set in GameConfig in start menu. If there is no GameConfig, this value will be used")]
+    private float ticksPerSecond = 2f;
+
+    [SerializeField]
+    [Tooltip("Should be set in GameConfig in start menu. If there is no GameConfig, this value will be used")]
+    private float packetsPerSecond = 0.5f;
 
     public int packetDeliveryPoints = 10;
     public int wrongPacketDeliveryPenalty = 10;
@@ -23,8 +29,11 @@ public class GameManager : MonoBehaviour
 
     public Tilemap boundsTilemap;
 
+    public GameUI gameUI;
+
     public GameObject pipePrefab;
     public GameObject positionPipesPrefab;
+    public GameObject collisionParticleSystemPrefab;
 
     public List<Pipe> pipes;
 
@@ -37,7 +46,8 @@ public class GameManager : MonoBehaviour
 
     private Coroutine tickCoroutine;
     private Coroutine packetSpawnCoroutine;
-    
+
+    private GameConfig gameConfig;
 
     public delegate void OnTickHandler();
     public event OnTickHandler tickElapsed = delegate { };
@@ -54,6 +64,14 @@ public class GameManager : MonoBehaviour
         {
             GameObject pipesParent = Instantiate(positionPipesPrefab, Vector3.zero, Quaternion.identity);
             pipes = new List<Pipe>(pipesParent.GetComponentsInChildren<Pipe>());
+        }
+
+        gameConfig = GameConfig.Instance;
+
+        if (gameConfig != null)
+        {
+            ticksPerSecond = gameConfig.ticksPerSecond;
+            packetsPerSecond = gameConfig.packetsPerSecond;
         }
 
         UpdateScoreText();
@@ -73,9 +91,14 @@ public class GameManager : MonoBehaviour
         {
             
             // End game
-            Debug.LogWarning("Game over");
-            StopCoroutine(tickCoroutine);
-            StopCoroutine(packetSpawnCoroutine);
+            if (!gameOver)
+            {
+                StopCoroutine(tickCoroutine);
+                StopCoroutine(packetSpawnCoroutine);
+                gameOver = true;
+                gameUI.ShowEndGamePanel(score);
+            }
+            
         }else
         {
             elapsedTime += Time.deltaTime;
@@ -116,6 +139,7 @@ public class GameManager : MonoBehaviour
                         if (spawnedPackets.Contains(packet))
                         {
                             spawnedPackets.Remove(packet);
+                            Instantiate(collisionParticleSystemPrefab, packet.transform.position, Quaternion.identity);
                             Destroy(packet.gameObject);
                             score -= packetCollisionPenalty;
                             UpdateScoreText();
@@ -149,10 +173,27 @@ public class GameManager : MonoBehaviour
         if (pipe.packet == packet.packet)
         {
             score += packetDeliveryPoints;
+            try
+            {
+                audioManager.PlayCorrectDelivery();
+
+            }catch(System.Exception e)
+            {
+                Debug.LogError("Couldn't play sound");
+            }
         }
         else
         {
             score -= wrongPacketDeliveryPenalty;
+            try
+            {
+                audioManager.PlayWrongDelivery();
+
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError("Couldn't play sound");
+            }
         }
         spawnedPackets.Remove(packet);
         UpdateScoreText();
@@ -162,7 +203,7 @@ public class GameManager : MonoBehaviour
     public void PacketCollided(Packet packetOne, Packet packet)
     {
         score -= 10;
-
+        
 
         UpdateScoreText();
     }
@@ -277,20 +318,14 @@ public class GameManager : MonoBehaviour
         {
             pipeIndex = Random.Range(0, pipes.Count);
             packetIndex = Random.Range(0, pipes.Count);
-        } while (pipeIndex == packetIndex);
+        } while (pipeIndex == packetIndex || !pipes[pipeIndex].Available);
 
-        GameObject spawnedGo = pipes[pipeIndex].SpawnPacket(pipes[packetIndex].packet);
+        pipes[pipeIndex].SpawnPacket(pipes[packetIndex].packet);
+    }
 
-        if (spawnedGo != null)
-        {
-            Packet spawnedPacket = spawnedGo.GetComponent<Packet>();
-            if (spawnedPacket != null)
-            {
-                spawnedPackets.Add(spawnedPacket);
-
-            }
-
-        }
+    public void AddSpawnedPacket(Packet packet)
+    {
+        spawnedPackets.Add(packet);
     }
 
     private void SpawnTestPipes()

@@ -9,15 +9,27 @@ public class Pipe : MonoBehaviour
     public PacketAsset packet;
     private GameManager gm;
 
+    [SerializeField]
+    private Sprite[] sprites = new Sprite[1];
 
     public GameObject packetPrefab;
 
+    private int spriteIndex = 0;
+    private PacketAsset packetToSpawn;
+
+    public bool Available => packetToSpawn == null;
+
     public GameObject label;
+    private SpriteRenderer sr;
 
     // Start is called before the first frame update
     void Start()
     {
         gm = FindObjectOfType<GameManager>();
+        sr = GetComponent<SpriteRenderer>();
+
+        gm.tickElapsed += Tick;
+
         float zRotation = transform.rotation.eulerAngles.z;
         if (cell.Equals(new Vector3Int(int.MinValue, int.MinValue, int.MinValue)))
         {
@@ -37,13 +49,39 @@ public class Pipe : MonoBehaviour
         }
     }
 
-    public GameObject SpawnPacket(PacketAsset packetAsset)
+    public bool SpawnPacket(PacketAsset packetAsset)
     {
-        GameObject packetGo = Instantiate(packetPrefab, transform.position - transform.up, Quaternion.identity);
-        packetGo.GetComponent<Packet>().packet = packetAsset;
+        if (Available)
+        {
+            packetToSpawn = packetAsset;
+            return true;
+        }
+        
 
-        return packetGo;
+        return false;
     }
+
+    private void Tick()
+    {
+        if (!Available)
+        {
+            spriteIndex++;
+            if (spriteIndex >= sprites.Length)
+            {
+                spriteIndex = 0;
+                
+                GameObject packetGo = Instantiate(packetPrefab, transform.position - transform.up, Quaternion.identity);
+
+                Packet spawnedPacket = packetGo.GetComponent<Packet>();
+                spawnedPacket.packet = packetToSpawn;
+
+                gm.AddSpawnedPacket(spawnedPacket);
+
+                packetToSpawn = null;
+            }
+            sr.sprite = sprites[spriteIndex];
+        }
+    } 
 
     private void OnTriggerEnter2D(Collider2D collision)
     {

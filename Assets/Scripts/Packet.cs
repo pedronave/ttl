@@ -10,6 +10,7 @@ public class Packet : MonoBehaviour
 
     public GameManager gm;
 
+    public int ttl = 20;
     public Vector3 spritePivot = new Vector3(0.5f, 0.5f);
 
     public Grid grid;
@@ -40,8 +41,7 @@ public class Packet : MonoBehaviour
 
     public Vector3Int Cell => grid.WorldToCell(transform.position);
 
-    // Start is called before the first frame update
-    void Start()
+    private void Awake()
     {
         if (grid == null)
         {
@@ -50,6 +50,15 @@ public class Packet : MonoBehaviour
 
         }
 
+        sr = GetComponent<SpriteRenderer>();
+
+        gm = FindObjectOfType<GameManager>();
+        
+    }
+
+    // Start is called before the first frame update
+    void Start()
+    {
         if (pathTilemap == null)
         {
             GameObject temp = new GameObject(string.Format("{0} path", packet.name));
@@ -61,7 +70,6 @@ public class Packet : MonoBehaviour
             pathTilemap = tilemap.GetComponent<Tilemap>();
         }
 
-        sr = GetComponent<SpriteRenderer>();
         sr.sprite = packet.sprite;
 
         path = new Path(grid.WorldToCell(transform.position), pathTilemap, pathTile);
@@ -72,7 +80,6 @@ public class Packet : MonoBehaviour
         rt = rtTile;
         lt = ltTile;
 
-        gm = FindObjectOfType<GameManager>();
         gm.tickElapsed += Hop;
     }
 
@@ -123,6 +130,7 @@ public class Packet : MonoBehaviour
         Vector3 newPos = grid.CellToWorld(path.Move()) + spritePivot;
 
         transform.position = newPos;
+        ttl--;
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
@@ -142,6 +150,7 @@ public class Packet : MonoBehaviour
         }
 
         gm.tickElapsed -= Hop;
+
     }
 }
 

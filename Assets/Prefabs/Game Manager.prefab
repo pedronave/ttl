@@ -68,6 +68,8 @@ MonoBehaviour:
     type: 3}
   positionPipesPrefab: {fileID: 5103763918480934834, guid: 6b7bb09d5d25fc24b8f303c4200c17f8,
     type: 3}
+  collisionParticleSystemPrefab: {fileID: 1893960447148002586, guid: de81431e25c58ea43892acf1cd8d5e0c,
+    type: 3}
   pipes: []
   packetPrefabs: []
   spawnedPackets: []
